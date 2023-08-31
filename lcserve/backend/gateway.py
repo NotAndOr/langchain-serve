@@ -480,12 +480,11 @@ def _get_files_data(kwargs: Dict) -> Dict:
     from fastapi import UploadFile
     from starlette.datastructures import UploadFile as StarletteUploadFile
 
-    _files_data = {}
-    for k, v in kwargs.items():
-        if isinstance(v, (UploadFile, StarletteUploadFile)):
-            _files_data[k] = v
-
-    return _files_data
+    return {
+        k: v
+        for k, v in kwargs.items()
+        if isinstance(v, (UploadFile, StarletteUploadFile))
+    }
 
 
 def _get_func_data(
@@ -889,15 +888,15 @@ def _get_input_model_fields(
             )
 
         if _param.annotation == UploadFile:
-            if _param.default is inspect.Parameter.empty:
-                _file_fields[_name] = (_param.annotation, ...)
-            else:
-                _file_fields[_name] = (_param.annotation, _param.default)
+            _file_fields[_name] = (
+                (_param.annotation, ...)
+                if _param.default is inspect.Parameter.empty
+                else (_param.annotation, _param.default)
+            )
+        elif _param.default is inspect.Parameter.empty:
+            _input_model_fields[_name] = (_param.annotation, ...)
         else:
-            if _param.default is inspect.Parameter.empty:
-                _input_model_fields[_name] = (_param.annotation, ...)
-            else:
-                _input_model_fields[_name] = (_param.annotation, _param.default)
+            _input_model_fields[_name] = (_param.annotation, _param.default)
 
     return _input_model_fields, _file_fields
 
@@ -905,17 +904,15 @@ def _get_input_model_fields(
 def _get_file_field_params(
     fields: Dict[str, Tuple[Type, Any]]
 ) -> List[inspect.Parameter]:
-    _file_field_params = []
-    for _name, _field in fields.items():
-        _file_field_params.append(
-            inspect.Parameter(
-                _name,
-                inspect.Parameter.POSITIONAL_ONLY,
-                annotation=_field[0],
-                default=_field[1],
-            )
+    return [
+        inspect.Parameter(
+            _name,
+            inspect.Parameter.POSITIONAL_ONLY,
+            annotation=_field[0],
+            default=_field[1],
         )
-    return _file_field_params
+        for _name, _field in fields.items()
+    ]
 
 
 def _get_output_model_fields(func: Callable) -> Dict[str, Tuple[Type, Any]]:

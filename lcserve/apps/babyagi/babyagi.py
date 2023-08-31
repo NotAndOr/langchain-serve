@@ -137,7 +137,7 @@ def prioritize_tasks(
 ) -> List[Dict]:
     """Prioritize tasks."""
     task_names = [t["task_name"] for t in task_list]
-    next_task_id = int(this_task_id) + 1
+    next_task_id = this_task_id + 1
     response = task_prioritization_chain.run(
         task_names=task_names, next_task_id=next_task_id, objective=objective
     )
@@ -235,9 +235,7 @@ class BabyAGI(Chain, BaseModel):
 
     def should_continue(self) -> bool:
         ans = input("Do you want to continue? (y/n): ")
-        if ans.lower() == "n":
-            return False
-        return True
+        return ans.lower() != "n"
 
     @property
     def input_keys(self) -> List[str]:
@@ -301,10 +299,9 @@ class BabyAGI(Chain, BaseModel):
                 if not self.should_continue():
                     self.print_task_ending()
                     break
-            else:
-                if self.max_iterations is not None and num_iters == self.max_iterations:
-                    self.print_task_ending()
-                    break
+            elif self.max_iterations is not None and num_iters == self.max_iterations:
+                self.print_task_ending()
+                break
         return {}
 
     @classmethod

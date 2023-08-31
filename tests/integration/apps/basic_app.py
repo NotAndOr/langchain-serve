@@ -40,7 +40,7 @@ async def async_ws(interval: int, **kwargs) -> str:
 
 def authorizer(token: str) -> str:
     print(f"Got token: {token}")
-    if not token == "mysecrettoken":
+    if token != "mysecrettoken":
         raise Exception("Invalid token")
 
     return "username"

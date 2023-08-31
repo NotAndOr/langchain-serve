@@ -41,12 +41,12 @@ def StartFlow(protocol, uses, uses_with: Dict = None, port=12345):
     from .backend.playground.utils.helper import parse_uses_with
 
     with Flow(port=port, protocol=protocol).add(
-        uses=uses,
-        uses_with=parse_uses_with(uses_with) if uses_with else None,
-        env={'JINA_LOG_LEVEL': 'INFO'},
-        allow_concurrent=True,
-    ) as f:
-        yield str(f.protocol).lower() + '://' + f.host + ':' + str(f.port)
+            uses=uses,
+            uses_with=parse_uses_with(uses_with) if uses_with else None,
+            env={'JINA_LOG_LEVEL': 'INFO'},
+            allow_concurrent=True,
+        ) as f:
+        yield f'{str(f.protocol).lower()}://{f.host}:{str(f.port)}'
 
 
 @contextmanager
@@ -55,16 +55,16 @@ def StartFlowWithPlayground(protocol, uses, uses_with: Dict = None, port=12345):
     from .backend.playground.utils.helper import parse_uses_with
 
     with (
-        Flow(port=port)
-        .config_gateway(uses=PlaygroundGateway, protocol=protocol)
-        .add(
-            uses=uses,
-            uses_with=parse_uses_with(uses_with) if uses_with else None,
-            env={'JINA_LOG_LEVEL': 'INFO'},
-            allow_concurrent=True,
-        )
-    ) as f:
-        yield str(f.protocol).lower() + '://' + f.host + ':' + str(f.port)
+            Flow(port=port)
+            .config_gateway(uses=PlaygroundGateway, protocol=protocol)
+            .add(
+                uses=uses,
+                uses_with=parse_uses_with(uses_with) if uses_with else None,
+                env={'JINA_LOG_LEVEL': 'INFO'},
+                allow_concurrent=True,
+            )
+        ) as f:
+        yield f'{str(f.protocol).lower()}://{f.host}:{str(f.port)}'
 
 
 def ServeGRPC(uses, uses_with: Dict = None, port=12345):
@@ -87,21 +87,20 @@ def Interact(host, inputs: Union[str, Dict], output_key='text'):
     if isinstance(inputs, str):
         inputs = {DEFAULT_KEY: inputs}
 
-    # create a document array from inputs as tag
-    r = Client(host=host).post(
-        on='/run', inputs=DocumentArray([Document(tags=inputs)]), return_responses=True
-    )
-    if r:
-        if len(r) == 1:
-            tags = r[0].docs[0].tags
-            if output_key in tags:
-                return tags[output_key]
-            elif RESULT in tags:
-                return tags[RESULT]
-            else:
-                return tags
-        else:
+    if r := Client(host=host).post(
+        on='/run',
+        inputs=DocumentArray([Document(tags=inputs)]),
+        return_responses=True,
+    ):
+        if len(r) != 1:
             return r
+        tags = r[0].docs[0].tags
+        if output_key in tags:
+            return tags[output_key]
+        elif RESULT in tags:
+            return tags[RESULT]
+        else:
+            return tags
 
 
 def InteractWithAgent(
@@ -122,24 +121,21 @@ def InteractWithAgent(
     elif envs:
         _parameters['env'] = envs
 
-    # create a document array from inputs as tag
-    r = Client(host=host).post(
+    if r := Client(host=host).post(
         on='/load_and_run',
         inputs=DocumentArray([Document(tags={DEFAULT_KEY: inputs})]),
         parameters=_parameters,
         return_responses=True,
-    )
-    if r:
-        if len(r) == 1:
-            tags = r[0].docs[0].tags
-            if AGENT_OUTPUT in tags and RESULT in tags:
-                return tags[RESULT], ''.join(tags[AGENT_OUTPUT])
-            elif RESULT in tags:
-                return tags[RESULT]
-            else:
-                return tags
-        else:
+    ):
+        if len(r) != 1:
             return r
+        tags = r[0].docs[0].tags
+        if AGENT_OUTPUT in tags and RESULT in tags:
+            return tags[RESULT], ''.join(tags[AGENT_OUTPUT])
+        elif RESULT in tags:
+            return tags[RESULT]
+        else:
+            return tags
 
 
 def hubble_exists(name: str, secret: Optional[str] = None) -> bool:
@@ -153,12 +149,10 @@ def hubble_exists(name: str, secret: Optional[str] = None) -> bool:
 
 
 def _any_websocket_router(app) -> bool:
-    # Go through the module and find all functions decorated by `serving` decorator
-    for _, func in inspect.getmembers(app, inspect.isfunction):
-        if hasattr(func, '__ws_serving__'):
-            return True
-
-    return False
+    return any(
+        hasattr(func, '__ws_serving__')
+        for _, func in inspect.getmembers(app, inspect.isfunction)
+    )
 
 
 def _add_to_path():
@@ -415,7 +409,7 @@ def get_gateway_jcloud_args(
                 'instance': instance,
                 'capacity': 'spot',
             },
-            'healthcheck': False if is_websocket else True,
+            'healthcheck': not is_websocket,
             'timeout': _timeout,
             **_autoscale_args,
         }
@@ -504,7 +498,7 @@ async def deploy_app_on_jcloud(
             await jcloud_flow.update()
 
         for k, v in jcloud_flow.endpoints.items():
-            if k.lower() == 'gateway (http)' or k.lower() == 'gateway (websocket)':
+            if k.lower() in ['gateway (http)', 'gateway (websocket)']:
                 return app_id, v
 
     return None, None
@@ -590,7 +584,7 @@ async def list_apps_on_jcloud(phase: str, name: str):
     )
 
     console = Console()
-    with console.status(f'[bold]Listing all apps'):
+    with console.status('[bold]Listing all apps'):
         all_apps = await CloudFlow().list_all(
             phase=phase, name=name, labels=f'app={APP_NAME}'
         )

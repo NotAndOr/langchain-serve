@@ -49,39 +49,40 @@ submit = st.button('Submit')
 
 
 def play():
-    if submit:
-        if not openai_token:
-            st.error('Please enter your OpenAI token')
-            return
+    if not submit:
+        return
+    if not openai_token:
+        st.error('Please enter your OpenAI token')
+        return
 
-        if not host:
-            st.error('Please enter the lc-serve host')
-            return
+    if not host:
+        st.error('Please enter the lc-serve host')
+        return
 
-        if not question:
-            st.error('Please enter your question')
-            return
+    if not question:
+        st.error('Please enter your question')
+        return
 
-        if not urls:
-            st.error('Please enter your urls')
-            return
+    if not urls:
+        st.error('Please enter your urls')
+        return
 
-        headers = {'Content-Type': 'application/json'}
-        data = {
-            'urls': urls.split(','),
-            'question': question,
-            'envs': {'OPENAI_API_KEY': openai_token},
-        }
-        with st.spinner(text="Asking chain..."):
-            response = requests.post(host + '/ask', headers=headers, json=data)
-            try:
-                response = Response.parse_raw(response.text)
-                st.markdown(f'Answer: **{response.result.strip()}**')
-                with st.expander('Show stdout'):
-                    st.write(response.json())
-            except Exception as e:
-                st.error(e)
-                return
+    headers = {'Content-Type': 'application/json'}
+    data = {
+        'urls': urls.split(','),
+        'question': question,
+        'envs': {'OPENAI_API_KEY': openai_token},
+    }
+    with st.spinner(text="Asking chain..."):
+        response = requests.post(f'{host}/ask', headers=headers, json=data)
+        try:
+            response = Response.parse_raw(response.text)
+            st.markdown(f'Answer: **{response.result.strip()}**')
+            with st.expander('Show stdout'):
+                st.write(response.json())
+        except Exception as e:
+            st.error(e)
+            return
 
 
 if __name__ == '__main__':
