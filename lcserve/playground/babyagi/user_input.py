@@ -75,7 +75,7 @@ def prompt_user() -> UserInput:
     # Get custom tools
     custom_tools_selected = []
     while True:
-        if len(custom_tools_selected) == 0:
+        if not custom_tools_selected:
             create_tool = Prompt.ask("🔧 Add a custom tool? (y/n)", default="y")
         else:
             create_tool = Prompt.ask("🔧 More custom tools to add? (y/n)", default="n")
@@ -98,7 +98,7 @@ def prompt_user() -> UserInput:
     # Get envs
     envs_selected = {}
     while True:
-        if len(envs_selected) == 0:
+        if not envs_selected:
             add_env = Prompt.ask("💻 Add an environment variable? (y/n)", default="y")
         else:
             add_env = Prompt.ask("💻 More environment variables? (y/n)", default="n")

@@ -41,9 +41,10 @@ def talk_to_agent(
         },
     )
     _response = response.json()
-    if 'result' in _response and 'chain_of_thought' in _response:
-        return _response['result'], _response['chain_of_thought']
-    elif 'result' in _response:
-        return _response['result'], None
+    if 'result' in _response:
+        if 'chain_of_thought' in _response:
+            return _response['result'], _response['chain_of_thought']
+        else:
+            return _response['result'], None
 
     return _response, None

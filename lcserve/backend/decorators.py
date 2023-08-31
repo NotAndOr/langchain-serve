@@ -13,11 +13,7 @@ def serving(_func=None, *, websocket: bool = False, auth: Callable = None):
         def sync_wrapper(*args, **kwargs):
             return func(*args, **kwargs)
 
-        if inspect.iscoroutinefunction(func):
-            wrapper = async_wrapper
-        else:
-            wrapper = sync_wrapper
-
+        wrapper = async_wrapper if inspect.iscoroutinefunction(func) else sync_wrapper
         _args = {
             'name': func.__name__,
             'doc': func.__doc__,
@@ -34,7 +30,4 @@ def serving(_func=None, *, websocket: bool = False, auth: Callable = None):
 
         return wrapper
 
-    if _func is None:
-        return decorator
-    else:
-        return decorator(_func)
+    return decorator if _func is None else decorator(_func)

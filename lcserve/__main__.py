@@ -62,7 +62,7 @@ async def serve_on_jcloud(
             name=name,
             timeout=timeout,
             app_id=app_id,
-            gateway_id=gateway_id_wo_tag + ':' + tag,
+            gateway_id=f'{gateway_id_wo_tag}:{tag}',
             is_websocket=is_websocket,
         ),
         app_id=app_id,

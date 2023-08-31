@@ -153,11 +153,11 @@ def run_cmd(command, std_output=False, wait=True):
 
 
 def get_random_tag():
-    return 't-' + uuid.uuid4().hex[:5]
+    return f't-{uuid.uuid4().hex[:5]}'
 
 
 def get_random_name():
-    return 'n-' + uuid.uuid4().hex[:5]
+    return f'n-{uuid.uuid4().hex[:5]}'
 
 
 async def run_function(func: Callable, **kwargs):

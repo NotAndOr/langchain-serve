@@ -8,11 +8,12 @@ from setuptools import find_packages, setup
 
 def get_requirements_list(f):
     with pathlib.Path(f).open() as requirements_txt:
-        requirements_list = [
+        return [
             str(requirement)
-            for requirement in pkg_resources.parse_requirements(requirements_txt)
+            for requirement in pkg_resources.parse_requirements(
+                requirements_txt
+            )
         ]
-        return requirements_list
 
 
 if sys.version_info < (3, 7, 0):

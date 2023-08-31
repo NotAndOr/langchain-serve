@@ -117,7 +117,7 @@ async def talk_to_agent(user_input: UserInput):
                                         log.info(f'Unknown message: {msg.data}')
 
                 elif msg.type == aiohttp.WSMsgType.ERROR:
-                    log.info('ws connection closed with exception %s' % ws.exception())
+                    log.info(f'ws connection closed with exception {ws.exception()}')
                 else:
                     log.info(msg)
 
